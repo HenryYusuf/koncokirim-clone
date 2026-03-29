@@ -1,11 +1,11 @@
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 import Header from "@/components/header";
 
-export const Route = createFileRoute("/_main")({
-  component: MainLayout,
+export const Route = createFileRoute("/_landing")({
+  component: LandingLayout,
 });
 
-function MainLayout() {
+function LandingLayout() {
   return (
     <div className="flex flex-col h-svh">
       <Header />
