@@ -9,80 +9,108 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as MainRouteImport } from './routes/_main'
+import { Route as LandingRouteImport } from './routes/_landing'
 import { Route as AuthRouteImport } from './routes/_auth'
-import { Route as MainIndexRouteImport } from './routes/_main.index'
-import { Route as MainDashboardRouteImport } from './routes/_main.dashboard'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as LandingIndexRouteImport } from './routes/_landing.index'
 import { Route as AuthLoginRouteImport } from './routes/_auth.login'
+import { Route as AppProfileRouteImport } from './routes/_app.profile'
+import { Route as AppOrdersRouteImport } from './routes/_app.orders'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 
-const MainRoute = MainRouteImport.update({
-  id: '/_main',
+const LandingRoute = LandingRouteImport.update({
+  id: '/_landing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MainIndexRoute = MainIndexRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingIndexRoute = LandingIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => MainRoute,
-} as any)
-const MainDashboardRoute = MainDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => MainRoute,
+  getParentRoute: () => LandingRoute,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => AuthRoute,
 } as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrdersRoute = AppOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof MainIndexRoute
+  '/': typeof LandingIndexRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/orders': typeof AppOrdersRoute
+  '/profile': typeof AppProfileRoute
   '/login': typeof AuthLoginRoute
-  '/dashboard': typeof MainDashboardRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof MainIndexRoute
+  '/': typeof LandingIndexRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/orders': typeof AppOrdersRoute
+  '/profile': typeof AppProfileRoute
   '/login': typeof AuthLoginRoute
-  '/dashboard': typeof MainDashboardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
-  '/_main': typeof MainRouteWithChildren
+  '/_landing': typeof LandingRouteWithChildren
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/orders': typeof AppOrdersRoute
+  '/_app/profile': typeof AppProfileRoute
   '/_auth/login': typeof AuthLoginRoute
-  '/_main/dashboard': typeof MainDashboardRoute
-  '/_main/': typeof MainIndexRoute
+  '/_landing/': typeof LandingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/dashboard'
+  fullPaths: '/' | '/dashboard' | '/orders' | '/profile' | '/login'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/dashboard'
+  to: '/' | '/dashboard' | '/orders' | '/profile' | '/login'
   id:
     | '__root__'
+    | '/_app'
     | '/_auth'
-    | '/_main'
+    | '/_landing'
+    | '/_app/dashboard'
+    | '/_app/orders'
+    | '/_app/profile'
     | '/_auth/login'
-    | '/_main/dashboard'
-    | '/_main/'
+    | '/_landing/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
-  MainRoute: typeof MainRouteWithChildren
+  LandingRoute: typeof LandingRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_main': {
-      id: '/_main'
+    '/_landing': {
+      id: '/_landing'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof MainRouteImport
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
@@ -92,19 +120,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_main/': {
-      id: '/_main/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_landing/': {
+      id: '/_landing/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof MainIndexRouteImport
-      parentRoute: typeof MainRoute
-    }
-    '/_main/dashboard': {
-      id: '/_main/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof MainDashboardRouteImport
-      parentRoute: typeof MainRoute
+      preLoaderRoute: typeof LandingIndexRouteImport
+      parentRoute: typeof LandingRoute
     }
     '/_auth/login': {
       id: '/_auth/login'
@@ -113,8 +141,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_app/profile': {
+      id: '/_app/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orders': {
+      id: '/_app/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AppOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
+
+interface AppRouteChildren {
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppOrdersRoute: typeof AppOrdersRoute
+  AppProfileRoute: typeof AppProfileRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDashboardRoute: AppDashboardRoute,
+  AppOrdersRoute: AppOrdersRoute,
+  AppProfileRoute: AppProfileRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AuthRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
@@ -126,21 +189,21 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
-interface MainRouteChildren {
-  MainDashboardRoute: typeof MainDashboardRoute
-  MainIndexRoute: typeof MainIndexRoute
+interface LandingRouteChildren {
+  LandingIndexRoute: typeof LandingIndexRoute
 }
 
-const MainRouteChildren: MainRouteChildren = {
-  MainDashboardRoute: MainDashboardRoute,
-  MainIndexRoute: MainIndexRoute,
+const LandingRouteChildren: LandingRouteChildren = {
+  LandingIndexRoute: LandingIndexRoute,
 }
 
-const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
+const LandingRouteWithChildren =
+  LandingRoute._addFileChildren(LandingRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
-  MainRoute: MainRouteWithChildren,
+  LandingRoute: LandingRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
