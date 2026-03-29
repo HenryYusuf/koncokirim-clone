@@ -45,6 +45,14 @@ export function createAuth() {
           required: false,
         },
       },
+      changeEmail: {
+        enabled: true
+      }
+    },
+    emailVerification: {
+      sendVerificationEmail: async ({ user, url }) => {
+        console.log(`Sending verification to ${user.email}: ${url}`);
+      },
     },
     plugins: [expo()],
   });

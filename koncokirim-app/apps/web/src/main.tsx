@@ -11,6 +11,14 @@ const router = createRouter({
   defaultPreload: "intent",
   defaultPendingComponent: () => <Loader />,
   context: { trpc, queryClient },
+  defaultNotFoundComponent: () => {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-svh p-4">
+        <h1 className="text-4xl font-black text-primary">404</h1>
+        <p className="text-muted-foreground mt-2">Halaman tidak ditemukan.</p>
+      </div>
+    );
+  },
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   },

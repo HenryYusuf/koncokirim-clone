@@ -1,0 +1,247 @@
+import { z } from "zod";
+import { protectedProcedure, router } from "../index";
+import { schema } from "@koncokirim-app/db";
+const { user, addresses } = schema;
+import { eq, and } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+
+
+import crypto from "crypto";
+import { env } from "@koncokirim-app/env/server";
+
+const formatWhatsAppNumber = (phone: string) => {
+  let cleaned = phone.replace(/\D/g, "");
+  if (cleaned.startsWith("0")) {
+    cleaned = "62" + cleaned.slice(1);
+  }
+  return cleaned;
+};
+
+export const profileRouter = router({
+  getProfile: protectedProcedure.query(async ({ ctx }) => {
+    const [userData] = await ctx.db
+      .select()
+      .from(user)
+      .where(eq(user.id, ctx.session.user.id));
+    return userData;
+  }),
+
+  updateProfile: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(user)
+        .set({
+          ...(input.name && { name: input.name }),
+        })
+        .where(eq(user.id, ctx.session.user.id));
+      return { success: true };
+    }),
+
+  sendOtp: protectedProcedure
+    .input(z.object({ phoneNumber: z.string().min(9) }))
+    .mutation(async ({ ctx, input }) => {
+      const waNumber = formatWhatsAppNumber(input.phoneNumber);
+
+      // Generate 6-digit OTP
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+      // Save to user
+      await ctx.db
+        .update(user)
+        .set({ otpCode, otpExpiresAt })
+        .where(eq(user.id, ctx.session.user.id));
+
+      // Send via Evolution API
+      const message = `Kode OTP KoncoKirim anda adalah: *${otpCode}*. Berlaku selama 5 menit. Jangan berikan kode ini ke siapapun.`;
+      
+      try {
+        const response = await fetch(
+          `${env.EVOLUTION_API_URL}/message/sendText/${env.EVOLUTION_INSTANCE_NAME}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: env.EVOLUTION_API_KEY,
+            },
+            body: JSON.stringify({
+              number: waNumber,
+              text: message,
+            }),
+          }
+        );
+        
+        const responseData = await response.text();
+        console.log("Evolution API response:", response.status, responseData);
+
+        if (!response.ok) {
+          throw new Error(`Evolution API failed with status ${response.status}: ${responseData}`);
+        }
+      } catch (e: any) {
+        console.error("Evolution API Send OTP Error:", e);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Gagal mengirim OTP: ${e.message}`,
+        });
+      }
+
+      return { success: true };
+    }),
+
+  verifyOtp: protectedProcedure
+    .input(z.object({ phoneNumber: z.string().min(9), code: z.string().length(6) }))
+    .mutation(async ({ ctx, input }) => {
+      const waNumber = formatWhatsAppNumber(input.phoneNumber);
+
+      const [userData] = await ctx.db
+        .select()
+        .from(user)
+        .where(eq(user.id, ctx.session.user.id));
+
+      if (!userData || !userData.otpCode || !userData.otpExpiresAt) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "OTP belum direquest." });
+      }
+
+      if (new Date() > userData.otpExpiresAt) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Kode OTP kadaluarsa." });
+      }
+
+      if (userData.otpCode !== input.code) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Kode OTP salah." });
+      }
+
+      // Valid, update phone number and clear OTP
+      await ctx.db
+        .update(user)
+        .set({ 
+          phoneNumber: waNumber,
+          otpCode: null,
+          otpExpiresAt: null,
+        })
+        .where(eq(user.id, ctx.session.user.id));
+
+      return { success: true };
+    }),
+
+  getAddresses: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.db
+      .select()
+      .from(addresses)
+      .where(eq(addresses.userId, ctx.session.user.id));
+  }),
+
+  addAddress: protectedProcedure
+    .input(
+      z.object({
+        label: z.string().min(1),
+        fullAddress: z.string().min(1),
+        receiverName: z.string().min(1),
+        receiverPhone: z.string().min(1),
+        isDefault: z.boolean().default(false),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existingAddresses = await ctx.db
+        .select()
+        .from(addresses)
+        .where(eq(addresses.userId, ctx.session.user.id));
+
+      if (existingAddresses.length >= 3) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Maksimal 3 alamat diperbolehkan.",
+        });
+      }
+
+      // If set as default, unset others first
+      if (input.isDefault) {
+        await ctx.db
+          .update(addresses)
+          .set({ isDefault: false })
+          .where(eq(addresses.userId, ctx.session.user.id));
+      }
+
+      await ctx.db.insert(addresses).values({
+        id: crypto.randomUUID(),
+        userId: ctx.session.user.id,
+        label: input.label,
+        fullAddress: input.fullAddress,
+        receiverName: input.receiverName,
+        receiverPhone: input.receiverPhone,
+        isDefault: input.isDefault || existingAddresses.length === 0, // Default if first address
+      });
+
+      return { success: true };
+    }),
+
+  deleteAddress: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Ensure user owns the address
+      const [address] = await ctx.db
+        .select()
+        .from(addresses)
+        .where(
+          and(eq(addresses.id, input.id), eq(addresses.userId, ctx.session.user.id))
+        );
+
+      if (!address) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Alamat tidak ditemukan." });
+      }
+
+      await ctx.db.delete(addresses).where(eq(addresses.id, input.id));
+
+      // If deleted address was default, set another one as default
+      if (address.isDefault) {
+        const [nextAddress] = await ctx.db
+          .select()
+          .from(addresses)
+          .where(eq(addresses.userId, ctx.session.user.id))
+          .limit(1);
+
+        if (nextAddress) {
+          await ctx.db
+            .update(addresses)
+            .set({ isDefault: true })
+            .where(eq(addresses.id, nextAddress.id));
+        }
+      }
+
+      return { success: true };
+    }),
+
+  setDefaultAddress: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Ensure user owns the address
+      const [address] = await ctx.db
+        .select()
+        .from(addresses)
+        .where(
+          and(eq(addresses.id, input.id), eq(addresses.userId, ctx.session.user.id))
+        );
+
+      if (!address) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Alamat tidak ditemukan." });
+      }
+
+      // Unset previous default
+      await ctx.db
+        .update(addresses)
+        .set({ isDefault: false })
+        .where(eq(addresses.userId, ctx.session.user.id));
+
+      // Set new default
+      await ctx.db
+        .update(addresses)
+        .set({ isDefault: true })
+        .where(eq(addresses.id, input.id));
+
+      return { success: true };
+    }),
+});

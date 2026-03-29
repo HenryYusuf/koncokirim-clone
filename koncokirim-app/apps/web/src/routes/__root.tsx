@@ -1,7 +1,7 @@
 import { Toaster } from "@koncokirim-app/ui/components/sonner";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { HeadContent, Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+import { HeadContent, Link, Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import Header from "@/components/header";
@@ -35,6 +35,18 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       },
     ],
   }),
+  notFoundComponent: () => (
+    <div className="min-svh flex flex-col items-center justify-center p-6 text-center space-y-4">
+      <h1 className="text-6xl font-black text-primary">404</h1>
+      <p className="text-xl font-bold font-body">Ops! Halaman tidak ditemukan.</p>
+      <Link 
+        to="/dashboard" 
+        className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-black uppercase text-sm"
+      >
+        Kembali ke Dashboard
+      </Link>
+    </div>
+  ),
 });
 
 function RootComponent() {
@@ -50,7 +62,7 @@ function RootComponent() {
         <Outlet />
 
 
-        <Toaster richColors />
+        <Toaster richColors position="top-right" />
       </ThemeProvider>
       <TanStackRouterDevtools position="bottom-left" />
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
