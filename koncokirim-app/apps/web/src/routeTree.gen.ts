@@ -17,6 +17,10 @@ import { Route as AuthLoginRouteImport } from './routes/_auth.login'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppOrdersRouteImport } from './routes/_app.orders'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppProfileIndexRouteImport } from './routes/_app.profile.index'
+import { Route as AppProfileSecurityRouteImport } from './routes/_app.profile.security'
+import { Route as AppProfileEditRouteImport } from './routes/_app.profile.edit'
+import { Route as AppProfileAddressesRouteImport } from './routes/_app.profile.addresses'
 
 const LandingRoute = LandingRouteImport.update({
   id: '/_landing',
@@ -55,20 +59,47 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProfileIndexRoute = AppProfileIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppProfileRoute,
+} as any)
+const AppProfileSecurityRoute = AppProfileSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AppProfileRoute,
+} as any)
+const AppProfileEditRoute = AppProfileEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AppProfileRoute,
+} as any)
+const AppProfileAddressesRoute = AppProfileAddressesRouteImport.update({
+  id: '/addresses',
+  path: '/addresses',
+  getParentRoute: () => AppProfileRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LandingIndexRoute
   '/dashboard': typeof AppDashboardRoute
   '/orders': typeof AppOrdersRoute
-  '/profile': typeof AppProfileRoute
+  '/profile': typeof AppProfileRouteWithChildren
   '/login': typeof AuthLoginRoute
+  '/profile/addresses': typeof AppProfileAddressesRoute
+  '/profile/edit': typeof AppProfileEditRoute
+  '/profile/security': typeof AppProfileSecurityRoute
+  '/profile/': typeof AppProfileIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof LandingIndexRoute
   '/dashboard': typeof AppDashboardRoute
   '/orders': typeof AppOrdersRoute
-  '/profile': typeof AppProfileRoute
   '/login': typeof AuthLoginRoute
+  '/profile/addresses': typeof AppProfileAddressesRoute
+  '/profile/edit': typeof AppProfileEditRoute
+  '/profile/security': typeof AppProfileSecurityRoute
+  '/profile': typeof AppProfileIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,15 +108,36 @@ export interface FileRoutesById {
   '/_landing': typeof LandingRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/orders': typeof AppOrdersRoute
-  '/_app/profile': typeof AppProfileRoute
+  '/_app/profile': typeof AppProfileRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_landing/': typeof LandingIndexRoute
+  '/_app/profile/addresses': typeof AppProfileAddressesRoute
+  '/_app/profile/edit': typeof AppProfileEditRoute
+  '/_app/profile/security': typeof AppProfileSecurityRoute
+  '/_app/profile/': typeof AppProfileIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/orders' | '/profile' | '/login'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/orders'
+    | '/profile'
+    | '/login'
+    | '/profile/addresses'
+    | '/profile/edit'
+    | '/profile/security'
+    | '/profile/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/orders' | '/profile' | '/login'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/orders'
+    | '/login'
+    | '/profile/addresses'
+    | '/profile/edit'
+    | '/profile/security'
+    | '/profile'
   id:
     | '__root__'
     | '/_app'
@@ -96,6 +148,10 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/_auth/login'
     | '/_landing/'
+    | '/_app/profile/addresses'
+    | '/_app/profile/edit'
+    | '/_app/profile/security'
+    | '/_app/profile/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -162,19 +218,65 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/profile/': {
+      id: '/_app/profile/'
+      path: '/'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof AppProfileIndexRouteImport
+      parentRoute: typeof AppProfileRoute
+    }
+    '/_app/profile/security': {
+      id: '/_app/profile/security'
+      path: '/security'
+      fullPath: '/profile/security'
+      preLoaderRoute: typeof AppProfileSecurityRouteImport
+      parentRoute: typeof AppProfileRoute
+    }
+    '/_app/profile/edit': {
+      id: '/_app/profile/edit'
+      path: '/edit'
+      fullPath: '/profile/edit'
+      preLoaderRoute: typeof AppProfileEditRouteImport
+      parentRoute: typeof AppProfileRoute
+    }
+    '/_app/profile/addresses': {
+      id: '/_app/profile/addresses'
+      path: '/addresses'
+      fullPath: '/profile/addresses'
+      preLoaderRoute: typeof AppProfileAddressesRouteImport
+      parentRoute: typeof AppProfileRoute
+    }
   }
 }
+
+interface AppProfileRouteChildren {
+  AppProfileAddressesRoute: typeof AppProfileAddressesRoute
+  AppProfileEditRoute: typeof AppProfileEditRoute
+  AppProfileSecurityRoute: typeof AppProfileSecurityRoute
+  AppProfileIndexRoute: typeof AppProfileIndexRoute
+}
+
+const AppProfileRouteChildren: AppProfileRouteChildren = {
+  AppProfileAddressesRoute: AppProfileAddressesRoute,
+  AppProfileEditRoute: AppProfileEditRoute,
+  AppProfileSecurityRoute: AppProfileSecurityRoute,
+  AppProfileIndexRoute: AppProfileIndexRoute,
+}
+
+const AppProfileRouteWithChildren = AppProfileRoute._addFileChildren(
+  AppProfileRouteChildren,
+)
 
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppOrdersRoute: typeof AppOrdersRoute
-  AppProfileRoute: typeof AppProfileRoute
+  AppProfileRoute: typeof AppProfileRouteWithChildren
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppOrdersRoute: AppOrdersRoute,
-  AppProfileRoute: AppProfileRoute,
+  AppProfileRoute: AppProfileRouteWithChildren,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
