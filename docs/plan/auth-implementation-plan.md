@@ -29,14 +29,14 @@ Validasi akan menggunakan regex ketat pada level Frontend (Zod) dan Backend:
 
 | No | Komponen | Tugas | Status |
 | :--- | :--- | :--- | :---: |
-| 1 | `packages/db` | Tambah kolom `role` (text, default: 'CUSTOMER') & `phoneNumber` (text, unique) di `schema/auth.ts`. | [ ] |
-| 2 | `packages/auth` | Daftarkan field baru di konfigurasi `betterAuth` (plugin `metadata` atau `schema` extension). | [ ] |
-| 3 | `packages/db` | Jalankan `bun x drizzle-kit generate` & `push` untuk update database lokal. | [ ] |
-| 4 | `apps/web` | Tambahkan validasi regex WhatsApp di `SignUpForm.tsx` via Zod. | [ ] |
-| 5 | `apps/web` | Update `SignUpForm.tsx` untuk menyertakan input text "Nomor WhatsApp (Aktif)". | [ ] |
-| 6 | `apps/web` | Kirim `role`: 'CUSTOMER' secara otomatis pada payload `authClient.signUp.email()`. | [ ] |
-| 7 | `apps/web` | Tambahkan middleware/proteksi sederhana pada route `/dashboard` menggunakan TanStack Router. | [ ] |
-| 8 | **Validation** | Verifikasi data tersimpan benar melalui `drizzle-kit studio` atau SQLite viewer. | [ ] |
+| 1 | `packages/db` | Tambah kolom `role` (text, default: 'CUSTOMER') & `phoneNumber` (text, unique) di `schema/auth.ts`. | [X] |
+| 2 | `packages/auth` | Daftarkan field baru di konfigurasi `betterAuth` (plugin `metadata` atau `schema` extension). | [X] |
+| 3 | `packages/db` | Jalankan `bun x drizzle-kit generate` & `push` untuk update database lokal. | [X] |
+| 4 | `apps/web` | Tambahkan validasi regex WhatsApp di `SignUpForm.tsx` via Zod. | [X] |
+| 5 | `apps/web` | Update `SignUpForm.tsx` untuk menyertakan input text "Nomor WhatsApp (Aktif)". | [X] |
+| 6 | `apps/web` | Kirim `role`: 'CUSTOMER' secara otomatis pada payload `authClient.signUp.email()`. | [X] |
+| 7 | `apps/web` | Tambahkan middleware/proteksi sederhana pada route `/dashboard` menggunakan TanStack Router. | [X] |
+| 8 | **Validation** | Verifikasi data tersimpan benar melalui `drizzle-kit studio` atau SQLite viewer. | [X] |
 
 ## 5. Timeline & Milestone
 - **Phase 1**: Database & Auth Logic Setup.

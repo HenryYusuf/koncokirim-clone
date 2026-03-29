@@ -20,13 +20,14 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
     meta: [
       {
-        title: "koncokirim-app",
+        title: "KoncoKirim | Logistics Platform",
       },
       {
         name: "description",
-        content: "koncokirim-app is a web application",
+        content: "KoncoKirim is the ultimate platform for seamless delivery and logistics management.",
       },
     ],
+
     links: [
       {
         rel: "icon",
@@ -46,10 +47,9 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey="vite-ui-theme"
       >
-        <div className="grid grid-rows-[auto_1fr] h-svh">
-          <Header />
-          <Outlet />
-        </div>
+        <Outlet />
+
+
         <Toaster richColors />
       </ThemeProvider>
       <TanStackRouterDevtools position="bottom-left" />

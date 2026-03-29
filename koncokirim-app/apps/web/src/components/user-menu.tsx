@@ -21,7 +21,7 @@ export default function UserMenu() {
     return <Skeleton className="h-9 w-24" />;
   }
 
-  if (!session) {
+  if (!session || !session.user) {
     return (
       <Link to="/login">
         <Button variant="outline">Sign In</Button>
@@ -38,7 +38,7 @@ export default function UserMenu() {
         <DropdownMenuGroup>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
+          <DropdownMenuItem>{session.user?.email}</DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
             onClick={() => {

@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1774768303383,
+      "tag": "0000_melodic_firebrand",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1774769573439,
+      "tag": "0001_curly_impossible_man",
+      "breakpoints": true
+    }
+  ]
+}

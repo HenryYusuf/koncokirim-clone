@@ -33,6 +33,19 @@ export function createAuth() {
         httpOnly: true,
       },
     },
+    user: {
+      additionalFields: {
+        role: {
+          type: "string",
+          required: false,
+          defaultValue: "CUSTOMER",
+        },
+        phoneNumber: {
+          type: "string",
+          required: false,
+        },
+      },
+    },
     plugins: [expo()],
   });
 }
