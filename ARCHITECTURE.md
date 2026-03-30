@@ -21,46 +21,47 @@ Aplikasi ini dibangun menggunakan **Better-T-Stack**, fokus pada *type-safety* e
 
 ## 2. Struktur Folder (Monorepo)
 
-Menggunakan struktur monorepo Turborepo untuk berbagi logika bisnis, tipe data, dan komponen UI antar platform.
+Menggunakan struktur monorepo Turborepo untuk berbagi logika bisnis, tipe data, dan komponen UI antar platform. Dokumentasi utama berada di root project, sementara kode aplikasi berada di dalam `koncokirim-app`.
 
 ```text
-koncokirim-app/
-├── apps/
-│   ├── web/         # Frontend Web (React + TanStack Router + Vite)
-│   ├── native/      # Aplikasi Mobile (React Native + Expo)
-│   └── server/      # Backend Entry Point (Hono + tRPC Server)
-│
-├── packages/
-│   ├── api/         # Definisi Router tRPC & Business Logic
-│   ├── auth/        # Konfigurasi Better-Auth (Server-side)
-│   ├── db/          # Schema Drizzle, Migrasi, & Database Client
-│   ├── env/         # Validasi Environment Variables (T3 Env)
-│   ├── ui/          # Shared UI Components (shadcn/ui + Base UI)
-│   └── config/      # Konfigurasi Shared (TSConfig, dsb)
-│
-├── ARCHITECTURE.md  # Dokumen ini
-├── PRD.md           # Dokumen Kebutuhan Produk
-├── turbo.json       # Konfigurasi Turborepo
-└── package.json     # Workspace Root
+koncokirim-clone/               # Root Project
+├── ARCHITECTURE.md             # Dokumen ini
+├── PRD.md                      # Dokumen Kebutuhan Produk
+├── DATABASE_SCHEMA.md          # Skema Database & ERD
+├── DESIGN_SYSTEM.md            # Panduan Visual & UI
+└── koncokirim-app/             # Source Code (Monorepo)
+    ├── apps/
+    │   ├── web/                # Frontend Web (React + TanStack Router)
+    │   ├── native/             # Aplikasi Mobile (Expo + Native Navigation)
+    │   └── server/             # Backend (Hono + tRPC Server)
+    ├── packages/
+    │   ├── api/                # Router tRPC & Business Logic
+    │   ├── auth/               # Konfigurasi Better-Auth (Server & Expo)
+    │   ├── db/                 # Schema Drizzle, Migrasi, & Turso
+    │   ├── env/                # Validasi Environment Variables
+    │   ├── ui/                 # Shared UI (shadcn/ui + Tailwind v4)
+    │   └── config/             # Konfigurasi Shared (TSConfig, dsb)
+    ├── turbo.json              # Konfigurasi Turborepo
+    └── package.json            # Workspace Root
 ```
 
 ## 3. Strategi Fitur Utama
 
 ### 3.1 Type-Safe Communication (tRPC)
-Berbeda dengan REST tradisional, tRPC memungkinkan frontend (Web & Native) untuk memanggil fungsi backend seolah-olah fungsi lokal dengan validasi tipe data otomatis dari router di `packages/api`.
+Komunikasi antara frontend (Web/Native) dan backend menggunakan tRPC, yang memungkinkan pemanggilan fungsi server secara langsung dengan validasi tipe data otomatis tanpa perlu definisi REST API manual. Router utama didefinisikan di `packages/api`.
 
 ### 3.2 Unified Auth (Better-auth)
-*   **Web:** Menggunakan `better-auth/react` untuk manajemen session via cookie.
-*   **Native:** Menggunakan `@better-auth/expo` dengan `SecureStore` untuk persistensi token secara aman di perangkat mobile.
-*   **Database:** Tabel user, session, dan account dikelola secara otomatis via adapter Drizzle di `packages/db`.
+*   **Web:** Menggunakan `better-auth/react` dengan manajemen sesi berbasis cookie.
+*   **Native:** Mendukung `@better-auth/expo` untuk persistensi token yang aman menggunakan `SecureStore`.
+*   **Adapter:** Data user dikelola via adapter Drizzle di `packages/db`, mencakup tabel `user`, `session`, `account`, dan `verification`.
 
-### 3.3 Shared Design System
-Komponen UI dasar (Button, Input, Card) didefinisikan sekali di `packages/ui` menggunakan Tailwind CSS v4 dan Radix UI primitives (Base UI), lalu diimpor oleh aplikasi Web.
+### 3.3 Shared UI & Tailwind v4
+Desain sistem dibangun menggunakan Tailwind CSS v4 yang terintegrasi di `packages/ui`. Komponen UI bersifat modular dan dapat digunakan kembali di aplikasi Web, sementara aplikasi Native sedang dalam tahap transisi menggunakan komponen khusus mobile.
 
 ### 3.4 Environment Management
-Menggunakan `packages/env` untuk memastikan semua *environment variables* yang dibutuhkan (seperti `DATABASE_URL` atau `SERVER_URL`) tervalidasi saat *build-time* dan *runtime* menggunakan Zod.
+Validasi *environment variable* dilakukan secara ketat menggunakan Zod di `packages/env` untuk mencegah kesalahan konfigurasi (seperti `DATABASE_URL` atau `BETTER_AUTH_SECRET`) saat runtime.
 
 ## 4. Keamanan & Performa
-*   **End-to-End Type Safety:** Mencegah bug runtime dengan memastikan kontrak data antara DB -> API -> Frontend konsisten.
-*   **SQLite Optimization:** SQLite memberikan latensi rendah untuk operasi baca/tulis yang sering dilakukan pada aplikasi lite.
-*   **Bun Performance:** Mempercepat proses instalasi dependensi, build, dan waktu start server secara signifikan.
+*   **End-to-End Type Safety:** Meminimalkan bug dengan memastikan sinkronisasi tipe dari database hingga ke level UI.
+*   **SQLite/Turso:** Optimal untuk performa tinggi dengan latensi rendah, cocok untuk aplikasi yang melayani komunitas lokal.
+*   **Bun Ecosystem:** Mempercepat siklus pengembangan mulai dari manajemen paket hingga eksekusi server.
