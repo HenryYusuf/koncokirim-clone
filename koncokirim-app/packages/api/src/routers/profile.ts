@@ -47,14 +47,32 @@ export const profileRouter = router({
     .mutation(async ({ ctx, input }) => {
       const waNumber = formatWhatsAppNumber(input.phoneNumber);
 
+      const [currentUser] = await ctx.db
+        .select()
+        .from(user)
+        .where(eq(user.id, ctx.session.user.id));
+
+      if (currentUser?.otpLastSentAt) {
+        const cooldownMs = 60 * 1000;
+        const timeSinceLast = Date.now() - currentUser.otpLastSentAt.getTime();
+        if (timeSinceLast < cooldownMs) {
+          const remaining = Math.ceil((cooldownMs - timeSinceLast) / 1000);
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: `Tunggu ${remaining} detik lagi untuk mengirim ulang OTP.`,
+          });
+        }
+      }
+
       // Generate 6-digit OTP
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+      const otpLastSentAt = new Date();
 
       // Save to user
       await ctx.db
         .update(user)
-        .set({ otpCode, otpExpiresAt })
+        .set({ otpCode, otpExpiresAt, otpLastSentAt })
         .where(eq(user.id, ctx.session.user.id));
 
       // Send via Evolution API
@@ -76,17 +94,16 @@ export const profileRouter = router({
           }
         );
         
-        const responseData = await response.text();
-        console.log("Evolution API response:", response.status, responseData);
-
         if (!response.ok) {
-          throw new Error(`Evolution API failed with status ${response.status}: ${responseData}`);
+          // Log only the status for security (PII Leak Fix)
+          console.error("Evolution API failed with status", response.status);
+          throw new Error(`Evolution API failed with status ${response.status}`);
         }
       } catch (e: any) {
-        console.error("Evolution API Send OTP Error:", e);
+        console.error("Evolution API Send OTP Error");
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Gagal mengirim OTP: ${e.message}`,
+          message: `Gagal mengirim OTP. Silakan coba beberapa saat lagi.`,
         });
       }
 

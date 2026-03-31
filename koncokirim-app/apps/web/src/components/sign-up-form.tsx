@@ -30,7 +30,6 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
           password: value.password,
           name: value.name,
           phoneNumber: value.phoneNumber,
-          role: "CUSTOMER",
         } as any, // Cast to any to bypass temporary type issues with better-auth additional fields
         {
           onSuccess: () => {

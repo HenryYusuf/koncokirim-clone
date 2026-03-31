@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `otp_last_sent_at` integer;

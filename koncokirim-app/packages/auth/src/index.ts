@@ -4,6 +4,7 @@ import * as schema from "@koncokirim-app/db/schema/auth";
 import { env } from "@koncokirim-app/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { z } from "zod";
 
 export function createAuth() {
   const db = createDb();
@@ -39,10 +40,14 @@ export function createAuth() {
           type: "string",
           required: false,
           defaultValue: "CUSTOMER",
+          input: false, // Prevent client-side override (Privilege Escalation Fix)
         },
         phoneNumber: {
           type: "string",
           required: false,
+          validator: {
+            input: z.string().regex(/^(08|\+628)\d{8,12}$/, "Format nomor WhatsApp tidak valid"),
+          },
         },
       },
       changeEmail: {
@@ -51,7 +56,7 @@ export function createAuth() {
     },
     emailVerification: {
       sendVerificationEmail: async ({ user, url }) => {
-        console.log(`Sending verification to ${user.email}: ${url}`);
+        // Log removed for security (Sensitive Data in Logs Fix)
       },
     },
     plugins: [expo()],
