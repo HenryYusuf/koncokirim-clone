@@ -12,6 +12,11 @@ export const Route = createFileRoute("/_app/profile/edit")({
   component: ProfileEditComponent,
 });
 
+const maskPhoneNumber = (phone: string) => {
+  if (phone.length < 7) return phone;
+  return phone.slice(0, 4) + "****" + phone.slice(-3);
+};
+
 function ProfileEditComponent() {
   const { data: profile, isLoading } = useQuery(trpc.profile.getProfile.queryOptions());
 
@@ -53,7 +58,13 @@ function ProfileEditComponent() {
       setOtpCode("");
       queryClient.invalidateQueries(trpc.profile.getProfile.queryFilter());
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => {
+      toast.error(e.message);
+      if (e.message.includes("hangus")) {
+        setOtpMode(false);
+        setOtpCode("");
+      }
+    },
   }));
 
   const handleNameSubmit = (e: React.FormEvent) => {
@@ -149,7 +160,7 @@ function ProfileEditComponent() {
             <div className="space-y-2 text-center pt-2">
               <h2 className="text-2xl font-black text-primary">Verifikasi OTP</h2>
               <p className="text-sm text-muted-foreground">
-                Masukkan 6-digit kode OTP yang kami kirim ke <strong>{phone}</strong>
+                Masukkan 6-digit kode OTP yang kami kirim ke <strong>{maskPhoneNumber(phone)}</strong>
               </p>
             </div>
 
