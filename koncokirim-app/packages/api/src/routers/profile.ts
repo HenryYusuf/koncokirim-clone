@@ -2,7 +2,7 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../index";
 import { schema } from "@koncokirim-app/db";
 const { user, addresses } = schema;
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 
@@ -139,7 +139,10 @@ export const profileRouter = router({
 
       const hashedInputCode = crypto.createHash("sha256").update(input.code).digest("hex");
       const isPhoneMatch = userData.pendingPhoneNumber === waNumber;
-      const isCodeMatch = userData.otpCode === hashedInputCode;
+      const isCodeMatch = crypto.timingSafeEqual(
+        Buffer.from(userData.otpCode),
+        Buffer.from(hashedInputCode)
+      );
 
       if (!isPhoneMatch || !isCodeMatch) {
         const newRetryCount = userData.otpRetryCount + 1;
@@ -158,14 +161,14 @@ export const profileRouter = router({
 
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Terlalu banyak percobaan salah. Silakan request OTP baru.",
+            message: "Terlalu banyak percobaan salah. Kode OTP telah hangus.",
           });
         }
 
-        // Increment retry count
+        // Increment retry count atomically
         await ctx.db
           .update(user)
-          .set({ otpRetryCount: newRetryCount })
+          .set({ otpRetryCount: sql`${user.otpRetryCount} + 1` })
           .where(eq(user.id, ctx.session.user.id));
 
         throw new TRPCError({
