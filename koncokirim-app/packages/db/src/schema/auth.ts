@@ -12,6 +12,8 @@ export const user = sqliteTable("user", {
   otpCode: text("otp_code"),
   otpExpiresAt: integer("otp_expires_at", { mode: "timestamp_ms" }),
   otpLastSentAt: integer("otp_last_sent_at", { mode: "timestamp_ms" }),
+  pendingPhoneNumber: text("pending_phone_number"),
+  otpRetryCount: integer("otp_retry_count").default(0).notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
     .notNull(),
