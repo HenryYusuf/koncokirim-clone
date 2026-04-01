@@ -137,17 +137,52 @@ export const profileRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Kode OTP kadaluarsa." });
       }
 
-      if (userData.otpCode !== input.code) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Kode OTP salah." });
+      const hashedInputCode = crypto.createHash("sha256").update(input.code).digest("hex");
+      const isPhoneMatch = userData.pendingPhoneNumber === waNumber;
+      const isCodeMatch = userData.otpCode === hashedInputCode;
+
+      if (!isPhoneMatch || !isCodeMatch) {
+        const newRetryCount = userData.otpRetryCount + 1;
+
+        if (newRetryCount >= 3) {
+          // Lockout: clear all OTP fields
+          await ctx.db
+            .update(user)
+            .set({
+              otpCode: null,
+              otpExpiresAt: null,
+              pendingPhoneNumber: null,
+              otpRetryCount: 0,
+            })
+            .where(eq(user.id, ctx.session.user.id));
+
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Terlalu banyak percobaan salah. Silakan request OTP baru.",
+          });
+        }
+
+        // Increment retry count
+        await ctx.db
+          .update(user)
+          .set({ otpRetryCount: newRetryCount })
+          .where(eq(user.id, ctx.session.user.id));
+
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: !isPhoneMatch ? "Nomor telepon tidak sesuai." : "Kode OTP salah.",
+        });
       }
 
       // Valid, update phone number and clear OTP
       await ctx.db
         .update(user)
         .set({ 
-          phoneNumber: waNumber,
+          phoneNumber: userData.pendingPhoneNumber!,
           otpCode: null,
           otpExpiresAt: null,
+          pendingPhoneNumber: null,
+          otpRetryCount: 0,
         })
         .where(eq(user.id, ctx.session.user.id));
 
