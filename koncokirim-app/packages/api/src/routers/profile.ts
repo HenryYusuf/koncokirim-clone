@@ -64,15 +64,24 @@ export const profileRouter = router({
         }
       }
 
-      // Generate 6-digit OTP
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      // Generate secure 6-digit OTP
+      const otpCode = crypto.randomInt(100000, 999999).toString();
       const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
       const otpLastSentAt = new Date();
+
+      // Hash the OTP for storage
+      const hashedOtp = crypto.createHash("sha256").update(otpCode).digest("hex");
 
       // Save to user
       await ctx.db
         .update(user)
-        .set({ otpCode, otpExpiresAt, otpLastSentAt })
+        .set({ 
+          otpCode: hashedOtp, 
+          pendingPhoneNumber: waNumber, 
+          otpRetryCount: 0,
+          otpExpiresAt, 
+          otpLastSentAt 
+        })
         .where(eq(user.id, ctx.session.user.id));
 
       // Send via Evolution API
